@@ -5,11 +5,17 @@
         <div v-if="videoFile">
             <video :src="videoFile" width="250" controls></video>
             <button @click="convertToGif">Convert to gif</button>
+            <button @click="encodeCropped">Encode cropped</button>
         </div>
 
         <div v-if="gif">
             <h3>Result</h3>
             <img :src="gif" alt="" width="250">
+        </div>
+
+        <div v-if="croppedVideo">
+            <h3>Cropped video result</h3>
+            <video :src="croppedVideo" width="250" controls></video>
         </div>
     </div>
 </template>
@@ -25,6 +31,7 @@ export default {
             ffmpeg: null,
             videoFile: null,
             gif: null,
+            croppedVideo: null,
         };
     },
     created() {
@@ -59,6 +66,25 @@ export default {
 
             // Update data value
             this.gif = url;
+        },
+        async encodeCropped() {
+            // Write file to memory
+            this.ffmpeg.FS("writeFile", "inputFile.mp4", await fetchFile(this.videoFile));
+
+            // Run the FFMpeg command
+            // i = input file, t = length of output, -ss (starting seconds) offset, -f = encode as ...
+            // await this.ffmpeg.run("-i", "inputFile.mp4", "-t", "2.5", "-ss", "2.0", "-f", "mp4", "outputFile.mp4");
+
+            await this.ffmpeg.run('-i', 'inputFile.mp4', "-filter:v", 'crop=100:100:0:0', 'outputFile.mp4');
+
+            // Read the result
+            const data = this.ffmpeg.FS("readFile", "outputFile.mp4");
+
+            // Create a URL
+            const url = URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" }));
+
+            // Update data value
+            this.croppedVideo = url;
         },
     },
 };
