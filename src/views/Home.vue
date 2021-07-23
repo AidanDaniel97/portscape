@@ -69,16 +69,20 @@ export default {
         },
         async encodeCropped() {
             // Write file to memory
-            this.ffmpeg.FS("writeFile", "inputFile.mp4", await fetchFile(this.videoFile));
+            this.ffmpeg.FS("writeFile", "input.mp4", await fetchFile(this.videoFile));
 
-            // Run the FFMpeg command
-            // i = input file, t = length of output, -ss (starting seconds) offset, -f = encode as ...
-            // await this.ffmpeg.run("-i", "inputFile.mp4", "-t", "2.5", "-ss", "2.0", "-f", "mp4", "outputFile.mp4");
+            // Templates:
 
-            await this.ffmpeg.run('-i', 'inputFile.mp4', "-filter:v", 'crop=100:100:0:0', 'outputFile.mp4');
+            // Blurred background - crops video to a rectangle and makes abckground blurred version of the video.
+            var blurred = ["-i", "input.mp4", "-c:v", "libx264", "-filter_complex", "[0:v]crop=610:1080:960:0[croppedbg];[croppedbg]scale=720:1280,boxblur=10[background];[0:v]crop=1345:755:288:162[croppedgf];[croppedgf]scale=720:-2[gameplay];[background][gameplay]overlay=y=(H-h)/2", "-c:a", "copy", "output.mp4"];
+
+            // Split - Puts the face cam video on top
+            var split = ["-i", "input.mp4", "-c:v", "libx264", "-filter_complex", "[0:v]crop=385:216:448:252[croppedfc];[croppedfc]scale=720:-2[top];[0:v]crop=591:720:344:0[croppedgf];[croppedgf]scale=720:-2[bottom];[top][bottom]vstack", "-c:a", "copy", "output.mp4"];
+
+            await this.ffmpeg.run(...blurred);
 
             // Read the result
-            const data = this.ffmpeg.FS("readFile", "outputFile.mp4");
+            const data = this.ffmpeg.FS("readFile", "output.mp4");
 
             // Create a URL
             const url = URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" }));
