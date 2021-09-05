@@ -26,6 +26,6 @@ npm run build
 npm run lint
 ```
 
-### Customize configuration
+### Notes
 
-See [Configuration Reference](https://cli.vuejs.org/config/).
+If you get an error `` - make sure that you launch Chrome with the command flag --enable-features=SharedArrayBuffer for local development.
