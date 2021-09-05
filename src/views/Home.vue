@@ -6,7 +6,7 @@
         <div class="editor-wrapper">
             <video ref="videoSrcEl" :src="videoSrcFile" controls></video>
 
-            <vue-cropper id="cropWrapper" :style="{maxHeight: cropWrapperHeight + 'px'}" v-if="imageSrc" ref="cropper" :src="imageSrc" alt="Source Image" :dragMode="move" :viewMode="3" :aspectRatio="1">
+            <vue-cropper id="cropWrapper" :style="{maxHeight: cropWrapperHeight + 'px'}" v-if="imageSrc" ref="cropper" :src="imageSrc" alt="Source Image" :viewMode="3" :aspectRatio="1">
             </vue-cropper>
 
             <!-- Canvas used for cropper reference -->
@@ -70,8 +70,12 @@ export default {
                     // grab the intrinsic size of the video and set the canvas to that size
                     this.canvasWidth = this.$refs.videoSrcEl.videoWidth;
                     this.canvasHeight = this.$refs.videoSrcEl.videoHeight;
+
+                    document.getElementById("canvas").width = "1920";
+                    document.getElementById("canvas").height = "1080";
+
                     // Convert the canvas to  base64 image
-                    var dataURL = document.getElementById("canvas").toDataURL();
+                    var dataURL = document.getElementById("canvas").toDataURL("image/png");
                     // set the cropper.js iamge source to this image
                     this.imageSrc = dataURL;
                 }, 1000);
@@ -80,18 +84,8 @@ export default {
         async encodeCropped() {
             var cropper = this.$refs.cropper;
 
-            var cropData = cropper.getData(!0);
-
-            console.log(cropData);
-
-            console.log(this.canvasWidth, this.cropdata);
-
-            // var cropx = cropData.x / this.canvasWidth;
-            // var cropy = cropData.y / this.canvasHeight;
-            // var cropwidth = cropData.width / this.canvasWidth;
-            // var cropheight = cropData.height / this.canvasHeight;
-
-            // console.log(cropx, cropy, cropwidth, cropheight, cropData);
+            var cropperData = cropper.getData(!0);
+            console.log(cropperData);
 
             // // Write file to memory
             // this.ffmpeg.FS("writeFile", "input.mp4", await fetchFile(this.videoSrcFile));
@@ -100,7 +94,17 @@ export default {
 
             // // Blurred background - crops video to a rectangle and makes abckground blurred version of the video.
             // // crop=output_w:output_h:x:y
-            // var blurred = ["-i", "input.mp4", "-c:v", "libx264", "-filter_complex", "[0:v]crop=" + cropwidth + ":" + cropheight + ":" + cropx + ":" + cropy + "[croppedbg];[croppedbg]scale=720:1280,boxblur=10[background];[0:v]crop=1345:755:288:162[croppedgf];[croppedgf]scale=720:-2[gameplay];[background][gameplay]overlay=y=(H-h)/2", "-c:a", "copy", "output.mp4"];
+            // var blurred = [
+            //     "-i",
+            //     "input.mp4",
+            //     "-c:v",
+            //     "libx264",
+            //     "-filter_complex",
+            //     "[0:v]crop=".concat(r, ":").concat(n, ":").concat(s, ":0[croppedbg];[croppedbg]scale=720:1280,boxblur=10[background];[0:v]crop=").concat(cropperData.width, ":").concat(cropperData.height, ":").concat(cropperData.x, ":").concat(cropperData.y, "[croppedgf];[croppedgf]scale=720:-2[gameplay];[background][gameplay]overlay=y=(H-h)/2"),
+            //     "-c:a",
+            //     "copy",
+            //     "output.mp4",
+            // ];
 
             // // // Split - Puts the face cam video on top
             // // var split = ["-i", "input.mp4", "-c:v", "libx264", "-filter_complex", "[0:v]crop=385:216:448:252[croppedfc];[croppedfc]scale=720:-2[top];[0:v]crop=591:720:344:0[croppedgf];[croppedgf]scale=720:-2[bottom];[top][bottom]vstack", "-c:a", "copy", "output.mp4"];
